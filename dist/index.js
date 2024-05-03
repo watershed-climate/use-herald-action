@@ -23177,7 +23177,7 @@ var ErrorLevels;
 })(ErrorLevels || (ErrorLevels = {}));
 var sanitize = (content) => {
   const attrs = __spreadValues(__spreadValues(__spreadValues({}, RuleMatchers), RuleActors), RuleExtras);
-  const rule = ["action", ...Object.keys(attrs)].reduce((memo2, attr) => {
+  const rule = ["action", "excludes", ...Object.keys(attrs)].reduce((memo2, attr) => {
     return content[attr] ? __spreadProps(__spreadValues({}, memo2), { [attr]: content[attr] }) : memo2;
   }, {});
   const sanitized = __spreadProps(__spreadValues({}, rule), {
@@ -23190,7 +23190,7 @@ var sanitize = (content) => {
   });
   debug3("sanitize:", {
     rule,
-    sanitize
+    sanitized
   });
   return sanitized;
 };
@@ -23280,20 +23280,16 @@ var Rules = class extends Array {
       cwd: env.GITHUB_WORKSPACE,
       absolute: true
     });
-    console.log("dear god are we even running this code");
     debug3("files found:", matches);
     const rules = matches.reduce((memo2, filePath) => {
       try {
         const rule = loadJSONFile(filePath);
         const isValid = isValidRawRule(rule);
-        console.log("what about this code");
         debug3("isValid:", { isValid });
         if (!isValid) {
           return memo2;
         }
-        const sanitized = sanitize(rule);
-        debug3("sanitized rule:", { sanitized });
-        return [...memo2, __spreadProps(__spreadValues({ name: (0, import_path2.basename)(filePath) }, sanitized), { path: filePath })];
+        return [...memo2, __spreadProps(__spreadValues({ name: (0, import_path2.basename)(filePath) }, sanitize(rule)), { path: filePath })];
       } catch (e) {
         console.error(`${filePath} can't be parsed, it will be ignored`);
         return memo2;
