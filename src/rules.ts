@@ -73,7 +73,7 @@ export interface Rule {
 
 const sanitize = (content: RawRule & StringIndexSignatureInterface): Rule => {
   const attrs = { ...RuleMatchers, ...RuleActors, ...RuleExtras };
-  const rule = ['action', ...Object.keys(attrs)].reduce((memo, attr) => {
+  const rule = ['action', 'excludes', ...Object.keys(attrs)].reduce((memo, attr) => {
     return content[attr] ? { ...memo, [attr]: content[attr] } : memo;
   }, {} as RawRule);
   const sanitized = {
@@ -87,8 +87,8 @@ const sanitize = (content: RawRule & StringIndexSignatureInterface): Rule => {
   };
   debug('sanitize:', {
     rule,
-    sanitize
-  })
+    sanitized,
+  });
   return sanitized;
 };
 
@@ -219,21 +219,17 @@ export class Rules extends Array<Rule> {
       cwd: env.GITHUB_WORKSPACE,
       absolute: true,
     });
-    console.log('dear god are we even running this code')
 
     debug('files found:', matches);
     const rules = matches.reduce((memo, filePath) => {
       try {
         const rule = loadJSONFile(filePath);
         const isValid = isValidRawRule(rule);
-        console.log('what about this code')
-        debug('isValid:', {isValid})
-        if(!isValid) {
+        debug('isValid:', { isValid });
+        if (!isValid) {
           return memo;
         }
-        const sanitized = sanitize(rule);
-        debug('sanitized rule:', {sanitized});
-        return  [...memo, { name: basename(filePath), ...sanitized, path: filePath }];
+        return [...memo, { name: basename(filePath), ...sanitize(rule), path: filePath }];
       } catch (e) {
         console.error(`${filePath} can't be parsed, it will be ignored`);
         return memo;
@@ -281,10 +277,11 @@ class MatchingRules extends Array<MatchingRule> {
     const matchedRules = await Promise.all(matchingRules);
 
     // status for now is the only type of rule that should always match given that it has an action regardless of the outcome.
-    const mandatoryRuleTypes = [RuleActions.status]
+    const mandatoryRuleTypes = [RuleActions.status];
 
-    const filtered = matchedRules.filter((rule) =>
-      mandatoryRuleTypes.includes(rule.action as RuleActions) || isMatchingRule(rule) && rule.matched);
+    const filtered = matchedRules.filter(
+      (rule) => mandatoryRuleTypes.includes(rule.action as RuleActions) || (isMatchingRule(rule) && rule.matched)
+    );
     return new MatchingRules(...filtered);
   }
 }
