@@ -224,8 +224,14 @@ export class Rules extends Array<Rule> {
     const rules = matches.reduce((memo, filePath) => {
       try {
         const rule = loadJSONFile(filePath);
-
-        return isValidRawRule(rule) ? [...memo, { name: basename(filePath), ...sanitize(rule), path: filePath }] : memo;
+        const isValid = isValidRawRule(rule);
+        debug('isValid:', {isValid})
+        if(!isValid) {
+          return memo;
+        }
+        const sanitized = sanitize(rule);
+        debug('sanitized rule:', {sanitized});
+        return  [...memo, { name: basename(filePath), ...sanitized, path: filePath }];
       } catch (e) {
         console.error(`${filePath} can't be parsed, it will be ignored`);
         return memo;
