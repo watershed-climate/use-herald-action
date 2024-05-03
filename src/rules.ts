@@ -219,12 +219,14 @@ export class Rules extends Array<Rule> {
       cwd: env.GITHUB_WORKSPACE,
       absolute: true,
     });
+    console.log('dear god are we even running this code')
 
     debug('files found:', matches);
     const rules = matches.reduce((memo, filePath) => {
       try {
         const rule = loadJSONFile(filePath);
         const isValid = isValidRawRule(rule);
+        console.log('what about this code')
         debug('isValid:', {isValid})
         if(!isValid) {
           return memo;
