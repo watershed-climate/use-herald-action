@@ -76,8 +76,7 @@ const sanitize = (content: RawRule & StringIndexSignatureInterface): Rule => {
   const rule = ['action', ...Object.keys(attrs)].reduce((memo, attr) => {
     return content[attr] ? { ...memo, [attr]: content[attr] } : memo;
   }, {} as RawRule);
-
-  return {
+  const sanitized = {
     ...rule,
     users: rule.users ? rule.users : [],
     teams: rule.teams ? rule.teams : [],
@@ -86,6 +85,11 @@ const sanitize = (content: RawRule & StringIndexSignatureInterface): Rule => {
     includesInPatch: makeArray(rule.includesInPatch),
     eventJsonPath: makeArray(rule.eventJsonPath),
   };
+  debug('sanitize:', {
+    rule,
+    sanitize
+  })
+  return sanitized;
 };
 
 export type MatchingRule = Rule & {
